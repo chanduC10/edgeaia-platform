@@ -1,18 +1,39 @@
-from fastapi import APIRouter, HTTPException, Depends
-from fastapi.security import OAuth2PasswordRequestForm
-from app.models.user import Token
-from app.core.auth import verify_password, create_access_token
-from motor.motor_asyncio import AsyncIOMotorClient
+# app/routes/auth.py
+
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from app.core.auth import hash_password, verify_password, create_access_token
 
 router = APIRouter()
-client = AsyncIOMotorClient("mongodb://localhost:27017")
-db = client["edge_ai_platform"]
 
-@router.post("/login", response_model=Token)
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = await db["users"].find_one({"username": form_data.username})
-    if not user or not verify_password(form_data.password, user["hashed_password"]):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    token = create_access_token({"sub": user["username"]})
+# Fake DB for now
+fake_db = {}
+
+# Signup model
+class SignUpModel(BaseModel):
+    username: str
+    password: str
+
+# Login model
+class LoginModel(BaseModel):
+    username: str
+    password: str
+
+# Signup route
+@router.post("/signup")
+def signup(user: SignUpModel):
+    if user.username in fake_db:
+        raise HTTPException(status_code=400, detail="User already exists")
+    fake_db[user.username] = hash_password(user.password)
+    return {"msg": "User created"}
+
+# Login route
+@router.post("/login")
+def login(user: LoginModel):
+    if user.username not in fake_db:
+        raise HTTPException(status_code=404, detail="User not found")
+    if not verify_password(user.password, fake_db[user.username]):
+        raise HTTPException(status_code=401, detail="Wrong password")
+    
+    token = create_access_token({"sub": user.username})
     return {"access_token": token, "token_type": "bearer"}
-

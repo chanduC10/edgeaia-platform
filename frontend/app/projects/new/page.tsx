@@ -81,6 +81,7 @@ export default function NewProject() {
   const [projectName, setProjectName] = useState('');
   const [selectedType, setSelectedType] = useState<string>('');
   const [step, setStep] = useState(1);
+  const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
 
   const handleTypeSelect = (typeId: string) => {
     setSelectedType(typeId);
@@ -90,7 +91,6 @@ export default function NewProject() {
     if (step === 1 && selectedType) {
       setStep(2);
     } else if (step === 2 && projectName.trim()) {
-      // Create project and navigate to dataset upload
       const projectId = Date.now().toString();
       localStorage.setItem('currentProject', JSON.stringify({
         id: projectId,
@@ -98,6 +98,8 @@ export default function NewProject() {
         type: selectedType,
         createdAt: new Date().toISOString()
       }));
+      // You can also store file info if needed
+      console.log('Selected files:', selectedFiles);
       router.push(`/projects/${projectId}/dataset`);
     }
   };
@@ -114,14 +116,10 @@ export default function NewProject() {
   return (
     <DashboardLayout>
       <div className="max-w-4xl mx-auto space-y-8">
-        {/* Header */}
         <div className="text-center space-y-4">
           <h1 className="text-3xl font-bold text-white">Create New Project</h1>
-          <p className="text-slate-400">
-            Set up a new Edge AI project for training and deployment
-          </p>
-          
-          {/* Progress indicator */}
+          <p className="text-slate-400">Set up a new Edge AI project for training and deployment</p>
+
           <div className="flex items-center justify-center gap-2 mt-6">
             <div className={`flex items-center gap-2 ${step >= 1 ? 'text-blue-400' : 'text-slate-500'}`}>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${
@@ -131,9 +129,7 @@ export default function NewProject() {
               </div>
               <span className="text-sm font-medium">Select Type</span>
             </div>
-            
             <div className={`w-8 h-0.5 ${step >= 2 ? 'bg-blue-500' : 'bg-slate-600'}`} />
-            
             <div className={`flex items-center gap-2 ${step >= 2 ? 'text-blue-400' : 'text-slate-500'}`}>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${
                 step >= 2 ? 'bg-blue-600/20 border-blue-500' : 'border-slate-600'
@@ -145,7 +141,6 @@ export default function NewProject() {
           </div>
         </div>
 
-        {/* Step 1: Select Project Type */}
         {step === 1 && (
           <div className="space-y-6">
             <div className="text-center">
@@ -204,7 +199,6 @@ export default function NewProject() {
           </div>
         )}
 
-        {/* Step 2: Project Details */}
         {step === 2 && (
           <div className="space-y-6">
             <div className="text-center">
@@ -229,6 +223,22 @@ export default function NewProject() {
                     onChange={(e) => setProjectName(e.target.value)}
                     className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400"
                   />
+                </div>
+
+                {/* Image file input */}
+                <div className="space-y-2">
+                  <Label htmlFor="projectImages" className="text-slate-300">Select Images</Label>
+                  <Input
+                    id="projectImages"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => setSelectedFiles(e.target.files)}
+                    className="bg-slate-800/50 border-slate-600 text-white"
+                  />
+                  {selectedFiles && (
+                    <p className="text-xs text-slate-400">{selectedFiles.length} file(s) selected</p>
+                  )}
                 </div>
 
                 <div className="p-4 rounded-lg bg-slate-800/30 border border-slate-700/50">

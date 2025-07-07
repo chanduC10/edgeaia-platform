@@ -1,32 +1,49 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import axios from 'axios';
+import { Brain, Shield, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Brain, Shield, Zap } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
-    // Simulate login delay
-    setTimeout(() => {
-      localStorage.setItem('user', JSON.stringify({ username: credentials.username }));
-      router.push('/dashboard');
-    }, 1000);
+    setError('');
+
+    try {
+      const response = await axios.post('http://localhost:8000/auth/login', {
+        username: credentials.username,
+        password: credentials.password,
+      });
+
+      if (response.status === 200 && response.data.access_token) {
+        localStorage.setItem('token', response.data.access_token);
+        router.push('/dashboard');
+      } else {
+        setError('Invalid response from server.');
+      }
+    } catch (err: any) {
+      console.error("Login error:", err.response?.data);
+      setError(err.response?.data?.detail || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
+
         {/* Logo and Brand */}
         <div className="text-center space-y-4">
           <div className="flex justify-center">
@@ -81,6 +98,13 @@ export default function LoginPage() {
               >
                 {loading ? 'Signing in...' : 'Sign in'}
               </Button>
+
+              {/* Show Error */}
+              {error && (
+                <div className="text-red-500 text-sm text-center mt-2">
+                  {error}
+                </div>
+              )}
             </form>
           </CardContent>
         </Card>
@@ -107,9 +131,9 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Demo credentials hint */}
+        {/* Demo Hint */}
         <div className="text-center text-xs text-slate-500">
-          Demo: Use any username/password to continue
+          Demo: Use your backend-created credentials
         </div>
       </div>
     </div>
