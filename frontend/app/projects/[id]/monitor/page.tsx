@@ -43,9 +43,7 @@ interface InferenceResult {
   processingTime: number;
 }
 
-export async function generateStaticParams() {
-  return [{ id: '1' }];
-}
+// ✅ REMOVED generateStaticParams() — it causes build errors in a 'use client' file
 
 export default function MonitorPage() {
   const params = useParams();
