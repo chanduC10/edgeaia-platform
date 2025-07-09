@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import {
   Upload,
@@ -129,7 +128,13 @@ export default function DatasetClient() {
               <span className="text-slate-400">Dataset Progress</span>
               <span className="text-white">{labeledCount}/{images.length} labeled</span>
             </div>
-            <Progress value={completionPercentage} className="h-2" />
+            {/* ✅ Safe custom progress bar (replaces problematic component) */}
+            <div className="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
+              <div
+                className="bg-blue-500 h-full transition-all duration-500 ease-in-out"
+                style={{ width: `${completionPercentage}%` }}
+              />
+            </div>
           </div>
         </div>
 
