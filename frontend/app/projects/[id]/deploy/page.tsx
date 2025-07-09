@@ -1,12 +1,10 @@
 // frontend/app/projects/[id]/deploy/page.tsx
-"use client";
-
-import DeployClient from './DeployClient';
+import DeployPage from './DeployClient';
 
 export async function generateStaticParams() {
-  return [{ id: '1' }]; // You can later replace this with real project IDs
+  return [{ id: '1' }]; // Replace with real project IDs if available
 }
 
-export default function DeployPage() {
-  return <DeployClient />;
+export default function Page() {
+  return <DeployPage />;
 }
