@@ -197,7 +197,7 @@ export default function Dashboard() {
                       <span className="text-white font-medium">{project.accuracy}%</span>
                     </div>
                    {typeof project.accuracy === "number" && (
-                    <Progress value={project.accuracy} max={100} className="h-2" />
+                    <Progress value={project.accuracy} className="h-2" />
                   )}
                   </div>
                   
