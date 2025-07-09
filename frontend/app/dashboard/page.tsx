@@ -6,13 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Brain, 
-  Plus, 
-  Activity, 
-  Cpu, 
-  Database, 
-  Settings,
+import {
+  Brain,
+  Plus,
+  Activity,
+  Cpu,
+  Database,
   BarChart3,
   Clock,
   CheckCircle,
@@ -35,7 +34,6 @@ interface Project {
 export default function Dashboard() {
   const router = useRouter();
 
-  // ✅ Token check to redirect unauthenticated users
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -104,22 +102,17 @@ export default function Dashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        {/* Header */}
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-3xl font-bold text-white">Project Dashboard</h1>
             <p className="text-slate-400 mt-2">Manage your Edge AI projects and deployments</p>
           </div>
-          <Button 
-            onClick={() => router.push('/projects/new')}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
+          <Button onClick={() => router.push('/projects/new')} className="bg-blue-600 hover:bg-blue-700 text-white">
             <Plus className="mr-2 h-4 w-4" />
             New Project
           </Button>
         </div>
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="glass-effect border-slate-700/50">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -166,7 +159,6 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* Projects Grid */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-white">Recent Projects</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -196,11 +188,11 @@ export default function Dashboard() {
                       <span className="text-slate-400">Accuracy</span>
                       <span className="text-white font-medium">{project.accuracy}%</span>
                     </div>
-                   {typeof project.accuracy === "number" && (
-                    <Progress value={project.accuracy} className="h-2" />
-                  )}
+                    {typeof project.accuracy === 'number' && (
+                      <Progress value={project.accuracy} className="h-2" />
+                    )}
                   </div>
-                  
+
                   <div className="flex justify-between items-center text-sm">
                     <div className="text-slate-400">
                       <Cpu className="inline h-3 w-3 mr-1" />
@@ -212,17 +204,17 @@ export default function Dashboard() {
                   </div>
 
                   <div className="flex gap-2 pt-2">
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
+                    <Button
+                      size="sm"
+                      variant="outline"
                       className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700"
                       onClick={() => router.push(`/projects/${project.id}/monitor`)}
                     >
                       <Activity className="mr-1 h-3 w-3" />
                       Monitor
                     </Button>
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
                       onClick={() => router.push(`/projects/${project.id}/train`)}
                     >
