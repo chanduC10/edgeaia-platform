@@ -196,7 +196,9 @@ export default function Dashboard() {
                       <span className="text-slate-400">Accuracy</span>
                       <span className="text-white font-medium">{project.accuracy}%</span>
                     </div>
-                    <Progress value={project.accuracy} className="h-2" />
+                   {typeof project.accuracy === "number" && (
+                    <Progress value={project.accuracy} max={100} className="h-2" />
+                  )}
                   </div>
                   
                   <div className="flex justify-between items-center text-sm">

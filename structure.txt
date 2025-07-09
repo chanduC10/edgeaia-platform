@@ -1,0 +1,26 @@
+.
+├── backend
+│   ├── app
+│   ├── Dockerfile
+│   ├── edgeenv
+│   └── requirements.txt
+├── docker-compose.yml
+├── frontend
+│   ├── app
+│   ├── components
+│   ├── components.json
+│   ├── Dockerfile
+│   ├── hooks
+│   ├── lib
+│   ├── next-env.d.ts
+│   ├── next.config.js
+│   ├── node_modules
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── tailwind.config.ts
+│   └── tsconfig.json
+├── README.md
+└── structure.txt
+
+10 directories, 14 files
