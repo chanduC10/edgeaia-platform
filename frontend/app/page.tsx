@@ -3,38 +3,48 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import { Brain, Shield, Zap } from 'lucide-react';
+import { Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-export default function LoginPage() {
+export default function AuthPage() {
+  const router = useRouter();
+  const [isLoginMode, setIsLoginMode] = useState(true);
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const router = useRouter();
+  const [message, setMessage] = useState('');
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setMessage('');
+
+    const url = isLoginMode
+      ? 'http://localhost:8000/auth/login'
+      : 'http://localhost:8000/auth/signup';
 
     try {
-      const response = await axios.post('http://localhost:8000/auth/login', {
+      const response = await axios.post(url, {
         username: credentials.username,
         password: credentials.password,
       });
 
-      if (response.status === 200 && response.data.access_token) {
-        localStorage.setItem('token', response.data.access_token);
-        router.push('/dashboard');
+      if (isLoginMode) {
+        if (response.data.access_token) {
+          localStorage.setItem('token', response.data.access_token);
+          router.push('/dashboard');
+        } else {
+          setMessage('Login failed: Invalid token.');
+        }
       } else {
-        setError('Invalid response from server.');
+        setMessage('Signup successful! You can now log in.');
+        setIsLoginMode(true); // switch to login after signup
       }
     } catch (err: any) {
-      console.error("Login error:", err.response?.data);
-      setError(err.response?.data?.detail || 'Login failed');
+      console.error(`${isLoginMode ? 'Login' : 'Signup'} error:`, err.response?.data);
+      setMessage(err.response?.data?.detail || 'Authentication failed');
     } finally {
       setLoading(false);
     }
@@ -43,8 +53,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
-
-        {/* Logo and Brand */}
+        {/* Logo */}
         <div className="text-center space-y-4">
           <div className="flex justify-center">
             <div className="p-3 rounded-2xl bg-blue-600/20 border border-blue-500/20">
@@ -57,22 +66,23 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Login Form */}
+        {/* Auth Form */}
         <Card className="glass-effect border-slate-700/50">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center text-white">Welcome back</CardTitle>
+          <CardHeader>
+            <CardTitle className="text-2xl text-center text-white">
+              {isLoginMode ? 'Welcome Back' : 'Create Account'}
+            </CardTitle>
             <CardDescription className="text-center text-slate-400">
-              Sign in to your account to continue
+              {isLoginMode ? 'Login to your account' : 'Signup to get started'}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleAuth} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="username" className="text-slate-300">Username</Label>
                 <Input
                   id="username"
                   type="text"
-                  placeholder="Enter your username"
                   value={credentials.username}
                   onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
                   className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400"
@@ -84,57 +94,46 @@ export default function LoginPage() {
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Enter your password"
                   value={credentials.password}
                   onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
                   className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400"
                   required
                 />
               </div>
-              <Button 
-                type="submit" 
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              <Button
+                type="submit"
+                className={`w-full ${isLoginMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'} text-white`}
                 disabled={loading}
               >
-                {loading ? 'Signing in...' : 'Sign in'}
+                {loading ? (isLoginMode ? 'Signing in...' : 'Signing up...') : (isLoginMode ? 'Login' : 'Signup')}
               </Button>
 
-              {/* Show Error */}
-              {error && (
-                <div className="text-red-500 text-sm text-center mt-2">
-                  {error}
-                </div>
+              {/* Show messages */}
+              {message && (
+                <p className="text-center text-sm mt-2 text-red-400">{message}</p>
               )}
             </form>
+
+            {/* Toggle */}
+            <div className="text-center mt-4 text-sm text-slate-400">
+              {isLoginMode ? (
+                <>
+                  Don’t have an account?{' '}
+                  <button type="button" className="text-green-400 underline" onClick={() => setIsLoginMode(false)}>
+                    Sign up
+                  </button>
+                </>
+              ) : (
+                <>
+                  Already have an account?{' '}
+                  <button type="button" className="text-blue-400 underline" onClick={() => setIsLoginMode(true)}>
+                    Log in
+                  </button>
+                </>
+              )}
+            </div>
           </CardContent>
         </Card>
-
-        {/* Features */}
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div className="space-y-2">
-            <div className="p-2 rounded-lg bg-green-600/20 border border-green-500/20 mx-auto w-fit">
-              <Zap className="h-5 w-5 text-green-400" />
-            </div>
-            <p className="text-xs text-slate-400">Fast Training</p>
-          </div>
-          <div className="space-y-2">
-            <div className="p-2 rounded-lg bg-purple-600/20 border border-purple-500/20 mx-auto w-fit">
-              <Brain className="h-5 w-5 text-purple-400" />
-            </div>
-            <p className="text-xs text-slate-400">Smart Deploy</p>
-          </div>
-          <div className="space-y-2">
-            <div className="p-2 rounded-lg bg-orange-600/20 border border-orange-500/20 mx-auto w-fit">
-              <Shield className="h-5 w-5 text-orange-400" />
-            </div>
-            <p className="text-xs text-slate-400">Secure Updates</p>
-          </div>
-        </div>
-
-        {/* Demo Hint */}
-        <div className="text-center text-xs text-slate-500">
-          Demo: Use your backend-created credentials
-        </div>
       </div>
     </div>
   );

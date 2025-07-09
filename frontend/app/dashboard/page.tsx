@@ -34,6 +34,15 @@ interface Project {
 
 export default function Dashboard() {
   const router = useRouter();
+
+  // ✅ Token check to redirect unauthenticated users
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/');
+    }
+  }, []);
+
   const [projects, setProjects] = useState<Project[]>([
     {
       id: '1',
