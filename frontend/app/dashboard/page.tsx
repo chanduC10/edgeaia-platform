@@ -33,51 +33,38 @@ interface Project {
 
 export default function Dashboard() {
   const router = useRouter();
+  const [projects, setProjects] = useState<Project[]>([]);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
+
     if (!token) {
       router.push('/');
+      return;
     }
-  }, []);
 
-  const [projects, setProjects] = useState<Project[]>([
-    {
-      id: '1',
-      name: 'Tyre Tread Detection',
-      type: 'Detection',
-      status: 'deployed',
-      accuracy: 94.2,
-      lastTrained: '2 hours ago',
-      deviceCount: 3,
-      modelVersion: 'v1.2'
-    },
-    {
-      id: '2',
-      name: 'PCB Inspection',
-      type: 'Inspection',
-      status: 'training',
-      accuracy: 87.5,
-      lastTrained: '1 day ago',
-      deviceCount: 1,
-      modelVersion: 'v0.8'
-    },
-    {
-      id: '3',
-      name: 'Product Classification',
-      type: 'Classification',
-      status: 'monitoring',
-      accuracy: 91.8,
-      lastTrained: '3 days ago',
-      deviceCount: 5,
-      modelVersion: 'v2.1'
-    }
-  ]);
+    fetch("https://edgeaia-backend.onrender.com/api/projects", {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Authentication failed");
+        const data = await res.json();
+        setProjects(data);
+      })
+      .catch((err) => {
+        console.error("Error fetching projects:", err);
+        router.push('/');
+      });
+  }, []);
 
   const stats = {
     totalProjects: projects.length,
     activeDevices: projects.reduce((sum, p) => sum + p.deviceCount, 0),
-    avgAccuracy: projects.reduce((sum, p) => sum + p.accuracy, 0) / projects.length,
+    avgAccuracy: projects.length > 0
+      ? projects.reduce((sum, p) => sum + p.accuracy, 0) / projects.length
+      : 0,
     deploymentsToday: 12
   };
 
@@ -113,9 +100,10 @@ export default function Dashboard() {
           </Button>
         </div>
 
+        {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="glass-effect border-slate-700/50">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-slate-300">Total Projects</CardTitle>
               <Brain className="h-4 w-4 text-blue-400" />
             </CardHeader>
@@ -126,7 +114,7 @@ export default function Dashboard() {
           </Card>
 
           <Card className="glass-effect border-slate-700/50">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-slate-300">Active Devices</CardTitle>
               <Cpu className="h-4 w-4 text-green-400" />
             </CardHeader>
@@ -137,7 +125,7 @@ export default function Dashboard() {
           </Card>
 
           <Card className="glass-effect border-slate-700/50">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-slate-300">Avg Accuracy</CardTitle>
               <BarChart3 className="h-4 w-4 text-purple-400" />
             </CardHeader>
@@ -148,7 +136,7 @@ export default function Dashboard() {
           </Card>
 
           <Card className="glass-effect border-slate-700/50">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-slate-300">Deployments</CardTitle>
               <Database className="h-4 w-4 text-orange-400" />
             </CardHeader>
@@ -159,11 +147,15 @@ export default function Dashboard() {
           </Card>
         </div>
 
+        {/* Project Cards */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-white">Recent Projects</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {projects.map((project) => (
-              <Card key={project.id} className="glass-effect border-slate-700/50 hover:border-slate-600/50 transition-colors group cursor-pointer">
+              <Card
+                key={project.id}
+                className="glass-effect border-slate-700/50 hover:border-slate-600/50 transition-colors group cursor-pointer"
+              >
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div>
@@ -188,9 +180,9 @@ export default function Dashboard() {
                       <span className="text-slate-400">Accuracy</span>
                       <span className="text-white font-medium">{project.accuracy}%</span>
                     </div>
-                    {/*typeof project.accuracy === 'number' && (
+                    {typeof project.accuracy === 'number' && (
                       <Progress value={project.accuracy} className="h-2" />
-                    )*/}
+                    )}
                   </div>
 
                   <div className="flex justify-between items-center text-sm">

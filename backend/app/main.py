@@ -7,7 +7,11 @@ app = FastAPI()
 # ✅ CORS setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Or use ["*"] during testing
+   allow_origins=[
+  "http://localhost:3000",
+  "https://edgeaia-frontend.onrender.com"
+]
+,  # Or use ["*"] during testing
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

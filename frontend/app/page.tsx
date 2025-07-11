@@ -22,8 +22,8 @@ export default function AuthPage() {
     setMessage('');
 
     const url = isLoginMode
-      ? 'http://localhost:8000/auth/login'
-      : 'http://localhost:8000/auth/signup';
+      ? 'http://edgeaia-backend.onrender.com/auth/login'
+      : 'http://edgeaia-backend.onrender.com/auth/signup';
 
     try {
       const response = await axios.post(url, {
