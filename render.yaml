@@ -15,13 +15,12 @@ services:
 
   - type: web
     name: edgeaia-frontend
-    env: docker
+    env: node
     plan: free
     repo: https://github.com/chanduC10/edgeaia-platform
     branch: main
     rootDir: frontend
-    dockerfilePath: Dockerfile
+    buildCommand: npm install && npm run build
+    startCommand: npx serve out
+    staticPublishPath: out
     autoDeploy: true
-    envVars:
-      - key: PORT
-        value: 3000
