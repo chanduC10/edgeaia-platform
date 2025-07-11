@@ -13,14 +13,12 @@ services:
       - key: PORT
         value: 8000
 
-  - type: web
+  - type: static
     name: edgeaia-frontend
-    env: node
     plan: free
     repo: https://github.com/chanduC10/edgeaia-platform
     branch: main
     rootDir: frontend
-    buildCommand: npm install && npm run build
-    startCommand: npx serve out
+    buildCommand: npm install && npm run build && npm run export
     staticPublishPath: out
     autoDeploy: true
