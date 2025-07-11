@@ -1,20 +1,20 @@
-# Use Node image
 FROM node:18
 
-# Set workdir
 WORKDIR /app
 
-# Copy dependency files first for caching
 COPY package*.json ./
-
-# Install packages
 RUN npm install
 
-# Copy rest of the frontend code
 COPY . .
 
-# Build the frontend
+# Build static export files
 RUN npm run build
 
-# Run the frontend
-CMD ["npm", "start"]
+# Install static file server
+RUN npm install -g serve
+
+# Expose static site port
+EXPOSE 3000
+
+# Serve the exported site
+CMD ["serve", "-s", "out", "-l", "3000"]
