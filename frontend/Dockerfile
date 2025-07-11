@@ -1,21 +1,20 @@
-# Use Node base image
+# Use Node image
 FROM node:18
 
-# Set working directory
+# Set workdir
 WORKDIR /app
 
-# Copy package.json and install packages
+# Copy dependency files first for caching
 COPY package*.json ./
+
+# Install packages
 RUN npm install
 
-# Copy the rest of the code
+# Copy rest of the frontend code
 COPY . .
 
-# Build the app
+# Build the frontend
 RUN npm run build
 
-# Expose port for frontend (Next.js runs on 3000)
-EXPOSE 3000
-
-# Start in production mode
+# Run the frontend
 CMD ["npm", "start"]

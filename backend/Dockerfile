@@ -1,17 +1,14 @@
-# Use Python base image
+# Use Python image
 FROM python:3.11
 
-# Set working directory
+# Set workdir
 WORKDIR /app
 
 # Copy backend code
 COPY . .
 
-# Install required Python packages
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# EXPOSE is very important for Render to detect the port
-EXPOSE 8000
-
-# Run FastAPI with uvicorn
+# Start FastAPI using uvicorn
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
