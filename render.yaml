@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: edgeaia-backend
+    env: docker
+    repo: https://github.com/chanduC10/edgeaia-platform
+    branch: main
+    dockerfilePath: backend/Dockerfile
+    buildCommand: ""
+    startCommand: ""
+    plan: free
+    autoDeploy: true
+    region: oregon
+    rootDir: backend
+
+  - type: web
+    name: edgeaia-frontend
+    env: docker
+    repo: https://github.com/chanduC10/edgeaia-platform
+    branch: main
+    dockerfilePath: frontend/Dockerfile
+    buildCommand: ""
+    startCommand: ""
+    plan: free
+    autoDeploy: true
+    region: oregon
+    rootDir: frontend
