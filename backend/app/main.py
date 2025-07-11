@@ -16,3 +16,8 @@ app.add_middleware(
 # ✅ Include routers
 app.include_router(auth.router, prefix="/auth")
 app.include_router(projects.router, prefix="/api")
+
+# ✅ Root route (for Render to show backend is healthy)
+@app.get("/")
+def root():
+    return {"message": "Backend is working!"}
