@@ -10,5 +10,8 @@ COPY . .
 # Install required Python packages
 RUN pip install --no-cache-dir -r requirements.txt
 
+# EXPOSE is very important for Render to detect the port
+EXPOSE 8000
+
 # Run FastAPI with uvicorn
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

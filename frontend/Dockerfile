@@ -8,8 +8,14 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-# Copy frontend app code
+# Copy the rest of the code
 COPY . .
 
-# Run Next.js frontend
-CMD ["npm", "run", "dev"]
+# Build the app
+RUN npm run build
+
+# Expose port for frontend (Next.js runs on 3000)
+EXPOSE 3000
+
+# Start in production mode
+CMD ["npm", "start"]
