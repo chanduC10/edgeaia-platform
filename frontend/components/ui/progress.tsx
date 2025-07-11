@@ -17,6 +17,11 @@ const Progress = React.forwardRef<
       ? Math.min(100, Math.max(0, value))
       : 0;
 
+  const transformStyle = React.useMemo(() => {
+    const percent = 100 - safeValue;
+    return { transform: `translateX(-${percent}%)` };
+  }, [safeValue]);
+
   return (
     <ProgressPrimitive.Root
       ref={ref}
@@ -28,7 +33,7 @@ const Progress = React.forwardRef<
     >
       <ProgressPrimitive.Indicator
         className="h-full w-full flex-1 bg-primary transition-all"
-        style={{ transform: `translateX(-${100 - safeValue}%)` }}
+        style={transformStyle}
       />
     </ProgressPrimitive.Root>
   );
