@@ -37,9 +37,13 @@ export default function Dashboard() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+    console.log("🧠 Token found in localStorage:", token);
 
     if (!token) {
-      router.push('/');
+      console.warn("❌ No token found, redirecting after short delay...");
+      setTimeout(() => {
+        router.push('/');
+      }, 300); // Delay to allow storage write/read
       return;
     }
 
@@ -51,10 +55,11 @@ export default function Dashboard() {
       .then(async (res) => {
         if (!res.ok) throw new Error("Authentication failed");
         const data = await res.json();
+        console.log("✅ Projects fetched:", data);
         setProjects(data);
       })
       .catch((err) => {
-        console.error("Error fetching projects:", err);
+        console.error("🚨 Error fetching projects:", err);
         router.push('/');
       });
   }, []);
@@ -180,9 +185,8 @@ export default function Dashboard() {
                       <span className="text-slate-400">Accuracy</span>
                       <span className="text-white font-medium">{project.accuracy}%</span>
                     </div>
-                    {/*typeof project.accuracy === 'number' && (
-                      <Progress value={project.accuracy} className="h-2" />
-                    )*/}
+                    {/* Uncomment when progress UI is ready */}
+                    {/* <Progress value={project.accuracy} className="h-2" /> */}
                   </div>
 
                   <div className="flex justify-between items-center text-sm">
