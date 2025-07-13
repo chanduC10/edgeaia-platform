@@ -2,30 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  Brain,
-  Plus,
-  Activity,
-  Cpu,
-  Database,
-  BarChart3,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  Play,
-} from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import {Brain, Plus, Activity, Cpu, Database, BarChart3,Clock, CheckCircle, AlertCircle, Play} from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard-layout';
-// import { Progress } from '@/components/ui/progress'; // Uncomment if using
-
 interface Project {
   id: string;
   name: string;
@@ -40,36 +22,37 @@ interface Project {
 export default function Dashboard() {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true); // ✅ new state
 
   useEffect(() => {
-    // Delay localStorage access to allow hydration
-    setTimeout(() => {
-      const token = localStorage.getItem('token');
-      console.log('🧠 Token:', token);
+    const timeout = setTimeout(() => {
+      const token = localStorage.getItem("token");
 
       if (!token) {
-        console.warn('No token found, redirecting to /');
         router.push('/');
         return;
       }
 
-      fetch('https://edgeaia-backend.onrender.com/api/projects', {
+      fetch("https://edgeaia-backend.onrender.com/api/projects", {
         headers: {
-          Authorization: `Bearer ${token}`,
-        },
+          Authorization: `Bearer ${token}`
+        }
       })
         .then(async (res) => {
-          if (!res.ok) throw new Error('Authentication failed');
+          if (!res.ok) throw new Error("Authentication failed");
           const data = await res.json();
-          console.log('✅ Projects fetched:', data);
           setProjects(data);
         })
         .catch((err) => {
-          console.error('🚨 Error fetching projects:', err);
+          console.error("Error fetching projects:", err);
           router.push('/');
-        });
-    }, 200); // Small delay to fix hydration issue
+        })
+        .finally(() => setLoading(false));
+    }, 300); // ✅ delay helps hydration
+
+    return () => clearTimeout(timeout);
   }, []);
+
 
   const stats = {
     totalProjects: projects.length,
