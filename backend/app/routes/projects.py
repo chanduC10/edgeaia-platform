@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
 from typing import List
@@ -23,14 +23,19 @@ def verify_token(token: str = Depends(oauth2_scheme)):
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-# 📦 Project schema
+# 📦 Project schema (returning to frontend)
 class Project(BaseModel):
     id: int
     name: str
+    type: str
     status: str
+    accuracy: float
+    lastTrained: str
+    deviceCount: int
+    modelVersion: str
     owner: str
-    last_updated: str
 
+# 👨‍💻 Models for creating and updating
 class CreateProject(BaseModel):
     name: str
     status: str
@@ -40,6 +45,11 @@ class UpdateProject(BaseModel):
     status: str
 
 # ✅ GET: Fetch all projects
+@router.get("/projects", response_model=List[Project])
+async def get_projects(current_user: str = Depends(verify_token)):
+    return [p for p in projects_db if p["owner"] == current_user]
+
+# ➕ POST: Create new project
 @router.post("/projects", response_model=Project)
 async def create_project(project: CreateProject, current_user: str = Depends(verify_token)):
     global project_id_counter
@@ -47,19 +57,18 @@ async def create_project(project: CreateProject, current_user: str = Depends(ver
     new_project = {
         "id": project_id_counter,
         "name": project.name,
-        "type": "Vision",  # required by frontend
+        "type": "Vision",               # ✅ Required by your frontend
         "status": project.status,
-        "accuracy": 87.5,  # dummy
-        "lastTrained": "2 days ago",
-        "deviceCount": 4,  # dummy
-        "modelVersion": "v1.0",  # dummy
-        "owner": current_user,
+        "accuracy": 87.5,              # ✅ Dummy value
+        "lastTrained": "2 days ago",   # ✅ Dummy value
+        "deviceCount": 4,              # ✅ Dummy value
+        "modelVersion": "v1.0",        # ✅ Dummy value
+        "owner": current_user
     }
 
     projects_db.append(new_project)
     project_id_counter += 1
     return new_project
-
 
 # ✏️ PUT: Update project
 @router.put("/projects/{project_id}", response_model=Project)
@@ -68,7 +77,6 @@ async def update_project(project_id: int, updated: UpdateProject, current_user: 
         if project["id"] == project_id and project["owner"] == current_user:
             project["name"] = updated.name
             project["status"] = updated.status
-            project["last_updated"] = "2025-07-03"
             return project
     raise HTTPException(status_code=404, detail="Project not found")
 
