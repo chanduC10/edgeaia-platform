@@ -2,10 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import {
   Brain,
   Plus,
@@ -16,9 +21,10 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
-  Play
+  Play,
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard-layout';
+// import { Progress } from '@/components/ui/progress'; // Uncomment if using
 
 interface Project {
   id: string;
@@ -36,70 +42,86 @@ export default function Dashboard() {
   const [projects, setProjects] = useState<Project[]>([]);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    console.log("🧠 Token found in localStorage:", token);
+    // Delay localStorage access to allow hydration
+    setTimeout(() => {
+      const token = localStorage.getItem('token');
+      console.log('🧠 Token:', token);
 
-    if (!token) {
-      console.warn("❌ No token found, redirecting after short delay...");
-      setTimeout(() => {
+      if (!token) {
+        console.warn('No token found, redirecting to /');
         router.push('/');
-      }, 300); // Delay to allow storage write/read
-      return;
-    }
-
-    fetch("https://edgeaia-backend.onrender.com/api/projects", {
-      headers: {
-        Authorization: `Bearer ${token}`
+        return;
       }
-    })
-      .then(async (res) => {
-        if (!res.ok) throw new Error("Authentication failed");
-        const data = await res.json();
-        console.log("✅ Projects fetched:", data);
-        setProjects(data);
+
+      fetch('https://edgeaia-backend.onrender.com/api/projects', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       })
-      .catch((err) => {
-        console.error("🚨 Error fetching projects:", err);
-        router.push('/');
-      });
+        .then(async (res) => {
+          if (!res.ok) throw new Error('Authentication failed');
+          const data = await res.json();
+          console.log('✅ Projects fetched:', data);
+          setProjects(data);
+        })
+        .catch((err) => {
+          console.error('🚨 Error fetching projects:', err);
+          router.push('/');
+        });
+    }, 200); // Small delay to fix hydration issue
   }, []);
 
   const stats = {
     totalProjects: projects.length,
     activeDevices: projects.reduce((sum, p) => sum + p.deviceCount, 0),
-    avgAccuracy: projects.length > 0
-      ? projects.reduce((sum, p) => sum + p.accuracy, 0) / projects.length
-      : 0,
-    deploymentsToday: 12
+    avgAccuracy:
+      projects.length > 0
+        ? projects.reduce((sum, p) => sum + p.accuracy, 0) / projects.length
+        : 0,
+    deploymentsToday: 12,
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'training': return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'deployed': return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'monitoring': return <Activity className="h-4 w-4 text-blue-500" />;
-      default: return <AlertCircle className="h-4 w-4 text-gray-500" />;
+      case 'training':
+        return <Clock className="h-4 w-4 text-yellow-500" />;
+      case 'deployed':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'monitoring':
+        return <Activity className="h-4 w-4 text-blue-500" />;
+      default:
+        return <AlertCircle className="h-4 w-4 text-gray-500" />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'training': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
-      case 'deployed': return 'bg-green-500/10 text-green-500 border-green-500/20';
-      case 'monitoring': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
-      default: return 'bg-gray-500/10 text-gray-500 border-gray-500/20';
+      case 'training':
+        return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+      case 'deployed':
+        return 'bg-green-500/10 text-green-500 border-green-500/20';
+      case 'monitoring':
+        return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+      default:
+        return 'bg-gray-500/10 text-gray-500 border-gray-500/20';
     }
   };
 
   return (
     <DashboardLayout>
       <div className="space-y-8">
+        {/* Header */}
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-3xl font-bold text-white">Project Dashboard</h1>
-            <p className="text-slate-400 mt-2">Manage your Edge AI projects and deployments</p>
+            <p className="text-slate-400 mt-2">
+              Manage your Edge AI projects and deployments
+            </p>
           </div>
-          <Button onClick={() => router.push('/projects/new')} className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Button
+            onClick={() => router.push('/projects/new')}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
             <Plus className="mr-2 h-4 w-4" />
             New Project
           </Button>
@@ -109,50 +131,66 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="glass-effect border-slate-700/50">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-300">Total Projects</CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-300">
+                Total Projects
+              </CardTitle>
               <Brain className="h-4 w-4 text-blue-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">{stats.totalProjects}</div>
+              <div className="text-2xl font-bold text-white">
+                {stats.totalProjects}
+              </div>
               <p className="text-xs text-slate-400">Active AI models</p>
             </CardContent>
           </Card>
 
           <Card className="glass-effect border-slate-700/50">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-300">Active Devices</CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-300">
+                Active Devices
+              </CardTitle>
               <Cpu className="h-4 w-4 text-green-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">{stats.activeDevices}</div>
+              <div className="text-2xl font-bold text-white">
+                {stats.activeDevices}
+              </div>
               <p className="text-xs text-slate-400">Connected edge devices</p>
             </CardContent>
           </Card>
 
           <Card className="glass-effect border-slate-700/50">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-300">Avg Accuracy</CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-300">
+                Avg Accuracy
+              </CardTitle>
               <BarChart3 className="h-4 w-4 text-purple-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">{stats.avgAccuracy.toFixed(1)}%</div>
+              <div className="text-2xl font-bold text-white">
+                {stats.avgAccuracy.toFixed(1)}%
+              </div>
               <p className="text-xs text-slate-400">Model performance</p>
             </CardContent>
           </Card>
 
           <Card className="glass-effect border-slate-700/50">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-300">Deployments</CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-300">
+                Deployments
+              </CardTitle>
               <Database className="h-4 w-4 text-orange-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">{stats.deploymentsToday}</div>
+              <div className="text-2xl font-bold text-white">
+                {stats.deploymentsToday}
+              </div>
               <p className="text-xs text-slate-400">Today</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Project Cards */}
+        {/* Projects */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-white">Recent Projects</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -183,9 +221,11 @@ export default function Dashboard() {
                   <div>
                     <div className="flex justify-between text-sm mb-2">
                       <span className="text-slate-400">Accuracy</span>
-                      <span className="text-white font-medium">{project.accuracy}%</span>
+                      <span className="text-white font-medium">
+                        {project.accuracy}%
+                      </span>
                     </div>
-                    {/* Uncomment when progress UI is ready */}
+                    {/* Uncomment when ready */}
                     {/* <Progress value={project.accuracy} className="h-2" /> */}
                   </div>
 
@@ -204,7 +244,9 @@ export default function Dashboard() {
                       size="sm"
                       variant="outline"
                       className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700"
-                      onClick={() => router.push(`/projects/${project.id}/monitor`)}
+                      onClick={() =>
+                        router.push(`/projects/${project.id}/monitor`)
+                      }
                     >
                       <Activity className="mr-1 h-3 w-3" />
                       Monitor
@@ -212,7 +254,9 @@ export default function Dashboard() {
                     <Button
                       size="sm"
                       className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                      onClick={() => router.push(`/projects/${project.id}/train`)}
+                      onClick={() =>
+                        router.push(`/projects/${project.id}/train`)
+                      }
                     >
                       <Play className="mr-1 h-3 w-3" />
                       Retrain
