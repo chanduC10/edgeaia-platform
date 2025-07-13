@@ -6,8 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import {Brain, Plus, Activity, Cpu, Database, BarChart3,Clock, CheckCircle, AlertCircle, Play} from 'lucide-react';
+import {
+  Brain, Plus, Activity, Cpu, Database, BarChart3,
+  Clock, CheckCircle, AlertCircle, Play
+} from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard-layout';
+
 interface Project {
   id: string;
   name: string;
@@ -22,13 +26,15 @@ interface Project {
 export default function Dashboard() {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true); // ✅ new state
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
       const token = localStorage.getItem("token");
+      console.log("🔐 Token from localStorage:", token);
 
       if (!token) {
+        console.log("🚫 No token found, redirecting to login");
         router.push('/');
         return;
       }
@@ -39,20 +45,27 @@ export default function Dashboard() {
         }
       })
         .then(async (res) => {
+          console.log("📦 Fetch status:", res.status);
           if (!res.ok) throw new Error("Authentication failed");
           const data = await res.json();
-          setProjects(data);
+          console.log("✅ Data from backend:", data);
+
+          if (Array.isArray(data)) {
+            setProjects(data);
+          } else {
+            console.warn("⚠️ Unexpected data format:", data);
+            router.push('/');
+          }
         })
         .catch((err) => {
-          console.error("Error fetching projects:", err);
+          console.error("❌ Error fetching projects:", err);
           router.push('/');
         })
         .finally(() => setLoading(false));
-    }, 300); // ✅ delay helps hydration
+    }, 300);
 
     return () => clearTimeout(timeout);
   }, []);
-
 
   const stats = {
     totalProjects: projects.length,
@@ -89,6 +102,14 @@ export default function Dashboard() {
         return 'bg-gray-500/10 text-gray-500 border-gray-500/20';
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white text-lg">
+        Loading your projects...
+      </div>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -208,7 +229,7 @@ export default function Dashboard() {
                         {project.accuracy}%
                       </span>
                     </div>
-                    {/* Uncomment when ready */}
+                    {/* Optional Progress bar */}
                     {/* <Progress value={project.accuracy} className="h-2" /> */}
                   </div>
 
@@ -227,9 +248,7 @@ export default function Dashboard() {
                       size="sm"
                       variant="outline"
                       className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700"
-                      onClick={() =>
-                        router.push(`/projects/${project.id}/monitor`)
-                      }
+                      onClick={() => router.push(`/projects/${project.id}/monitor`)}
                     >
                       <Activity className="mr-1 h-3 w-3" />
                       Monitor
@@ -237,9 +256,7 @@ export default function Dashboard() {
                     <Button
                       size="sm"
                       className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                      onClick={() =>
-                        router.push(`/projects/${project.id}/train`)
-                      }
+                      onClick={() => router.push(`/projects/${project.id}/train`)}
                     >
                       <Play className="mr-1 h-3 w-3" />
                       Retrain

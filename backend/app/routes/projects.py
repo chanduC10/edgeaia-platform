@@ -40,24 +40,26 @@ class UpdateProject(BaseModel):
     status: str
 
 # ✅ GET: Fetch all projects
-@router.get("/projects", response_model=List[Project])
-async def get_projects(current_user: str = Depends(verify_token)):
-    return [p for p in projects_db if p["owner"] == current_user]
-
-# ➕ POST: Create new project
 @router.post("/projects", response_model=Project)
 async def create_project(project: CreateProject, current_user: str = Depends(verify_token)):
     global project_id_counter
+
     new_project = {
         "id": project_id_counter,
         "name": project.name,
+        "type": "Vision",  # required by frontend
         "status": project.status,
+        "accuracy": 87.5,  # dummy
+        "lastTrained": "2 days ago",
+        "deviceCount": 4,  # dummy
+        "modelVersion": "v1.0",  # dummy
         "owner": current_user,
-        "last_updated": "2025-07-03"
     }
+
     projects_db.append(new_project)
     project_id_counter += 1
     return new_project
+
 
 # ✏️ PUT: Update project
 @router.put("/projects/{project_id}", response_model=Project)
