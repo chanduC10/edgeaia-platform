@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card, CardContent, CardDescription, CardHeader, CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import {
   Brain, Plus, Activity, Cpu, Database, BarChart3,
-  Clock, CheckCircle, AlertCircle, Play
+  Clock, CheckCircle, AlertCircle, Play,
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard-layout';
 
@@ -27,39 +28,38 @@ export default function Dashboard() {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null); // ✅ new
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      const token = localStorage.getItem("token");
-      console.log("🔐 Token from localStorage:", token);
+      const token = localStorage.getItem('token');
+      console.log('🔐 Token:', token);
 
       if (!token) {
-        console.log("🚫 No token found, redirecting to login");
+        console.warn('🚫 Token missing. Redirecting...');
         router.push('/');
         return;
       }
 
-      fetch("https://edgeaia-backend.onrender.com/api/projects", {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+      fetch('https://edgeaia-backend.onrender.com/api/projects', {
+        headers: { Authorization: `Bearer ${token}` },
       })
         .then(async (res) => {
-          console.log("📦 Fetch status:", res.status);
-          if (!res.ok) throw new Error("Authentication failed");
+          console.log('📦 Status:', res.status);
+          if (!res.ok) throw new Error('Unauthorized');
           const data = await res.json();
-          console.log("✅ Data from backend:", data);
+          console.log('✅ Fetched projects:', data);
 
           if (Array.isArray(data)) {
             setProjects(data);
           } else {
-            console.warn("⚠️ Unexpected data format:", data);
-            router.push('/');
+            console.warn('⚠️ Invalid data format:', data);
+            setError('Unexpected data format');
           }
         })
         .catch((err) => {
-          console.error("❌ Error fetching projects:", err);
-          router.push('/');
+          console.error('❌ Fetch error:', err);
+          setError('Authentication failed or backend error');
         })
         .finally(() => setLoading(false));
     }, 300);
@@ -105,8 +105,16 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-white text-lg">
-        Loading your projects...
+      <div className="min-h-screen flex items-center justify-center text-white text-xl">
+        🔄 Loading dashboard...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-400 text-center text-lg px-4">
+        ❌ {error}. Please try logging in again.
       </div>
     );
   }
@@ -134,61 +142,45 @@ export default function Dashboard() {
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="glass-effect border-slate-700/50">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-300">
-                Total Projects
-              </CardTitle>
+            <CardHeader className="flex justify-between items-center pb-2">
+              <CardTitle className="text-sm text-slate-300">Total Projects</CardTitle>
               <Brain className="h-4 w-4 text-blue-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">
-                {stats.totalProjects}
-              </div>
+              <div className="text-2xl font-bold text-white">{stats.totalProjects}</div>
               <p className="text-xs text-slate-400">Active AI models</p>
             </CardContent>
           </Card>
 
           <Card className="glass-effect border-slate-700/50">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-300">
-                Active Devices
-              </CardTitle>
+            <CardHeader className="flex justify-between items-center pb-2">
+              <CardTitle className="text-sm text-slate-300">Active Devices</CardTitle>
               <Cpu className="h-4 w-4 text-green-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">
-                {stats.activeDevices}
-              </div>
-              <p className="text-xs text-slate-400">Connected edge devices</p>
+              <div className="text-2xl font-bold text-white">{stats.activeDevices}</div>
+              <p className="text-xs text-slate-400">Connected devices</p>
             </CardContent>
           </Card>
 
           <Card className="glass-effect border-slate-700/50">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-300">
-                Avg Accuracy
-              </CardTitle>
+            <CardHeader className="flex justify-between items-center pb-2">
+              <CardTitle className="text-sm text-slate-300">Avg Accuracy</CardTitle>
               <BarChart3 className="h-4 w-4 text-purple-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">
-                {stats.avgAccuracy.toFixed(1)}%
-              </div>
+              <div className="text-2xl font-bold text-white">{stats.avgAccuracy.toFixed(1)}%</div>
               <p className="text-xs text-slate-400">Model performance</p>
             </CardContent>
           </Card>
 
           <Card className="glass-effect border-slate-700/50">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-300">
-                Deployments
-              </CardTitle>
+            <CardHeader className="flex justify-between items-center pb-2">
+              <CardTitle className="text-sm text-slate-300">Deployments</CardTitle>
               <Database className="h-4 w-4 text-orange-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">
-                {stats.deploymentsToday}
-              </div>
+              <div className="text-2xl font-bold text-white">{stats.deploymentsToday}</div>
               <p className="text-xs text-slate-400">Today</p>
             </CardContent>
           </Card>
@@ -197,75 +189,71 @@ export default function Dashboard() {
         {/* Projects */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-white">Recent Projects</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {projects.map((project) => (
-              <Card
-                key={project.id}
-                className="glass-effect border-slate-700/50 hover:border-slate-600/50 transition-colors group cursor-pointer"
-              >
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-white group-hover:text-blue-400 transition-colors">
-                        {project.name}
-                      </CardTitle>
-                      <CardDescription className="text-slate-400 mt-1">
-                        {project.type} • Model {project.modelVersion}
-                      </CardDescription>
-                    </div>
-                    <Badge className={getStatusColor(project.status)}>
-                      <div className="flex items-center gap-1">
-                        {getStatusIcon(project.status)}
-                        {project.status}
+          {projects.length === 0 ? (
+            <p className="text-slate-400">No projects yet. Click "New Project" to create one.</p>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {projects.map((project) => (
+                <Card
+                  key={project.id}
+                  className="glass-effect border-slate-700/50 hover:border-slate-600 transition-colors group cursor-pointer"
+                >
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle className="text-white group-hover:text-blue-400 transition">
+                          {project.name}
+                        </CardTitle>
+                        <CardDescription className="text-slate-400 mt-1">
+                          {project.type} • Model {project.modelVersion}
+                        </CardDescription>
                       </div>
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-sm mb-2">
+                      <Badge className={getStatusColor(project.status)}>
+                        <div className="flex items-center gap-1">
+                          {getStatusIcon(project.status)}
+                          {project.status}
+                        </div>
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex justify-between text-sm">
                       <span className="text-slate-400">Accuracy</span>
-                      <span className="text-white font-medium">
-                        {project.accuracy}%
-                      </span>
+                      <span className="text-white font-medium">{project.accuracy}%</span>
                     </div>
-                    {/* Optional Progress bar */}
-                    {/* <Progress value={project.accuracy} className="h-2" /> */}
-                  </div>
 
-                  <div className="flex justify-between items-center text-sm">
-                    <div className="text-slate-400">
-                      <Cpu className="inline h-3 w-3 mr-1" />
-                      {project.deviceCount} devices
+                    <div className="flex justify-between text-sm text-slate-400">
+                      <div>
+                        <Cpu className="inline h-3 w-3 mr-1" />
+                        {project.deviceCount} devices
+                      </div>
+                      <div>Trained {project.lastTrained}</div>
                     </div>
-                    <div className="text-slate-400">
-                      Trained {project.lastTrained}
-                    </div>
-                  </div>
 
-                  <div className="flex gap-2 pt-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700"
-                      onClick={() => router.push(`/projects/${project.id}/monitor`)}
-                    >
-                      <Activity className="mr-1 h-3 w-3" />
-                      Monitor
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                      onClick={() => router.push(`/projects/${project.id}/train`)}
-                    >
-                      <Play className="mr-1 h-3 w-3" />
-                      Retrain
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700"
+                        onClick={() => router.push(`/projects/${project.id}/monitor`)}
+                      >
+                        <Activity className="mr-1 h-3 w-3" />
+                        Monitor
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                        onClick={() => router.push(`/projects/${project.id}/train`)}
+                      >
+                        <Play className="mr-1 h-3 w-3" />
+                        Retrain
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </DashboardLayout>
