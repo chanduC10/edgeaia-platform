@@ -31,16 +31,24 @@ export default function AuthPage() {
         password: credentials.password,
       });
 
-      if (isLoginMode) {
-        if (response.data.access_token) {
-          localStorage.setItem('token', response.data.access_token);
-          router.push('/dashboard');
-        } else {
-          setMessage('Login failed: Invalid token.');
-        }
-      } else {
+      if (isLoginMode && response.data.access_token) {
+        const token = response.data.access_token;
+
+        // ✅ Store token
+        localStorage.setItem('token', token);
+
+        // ✅ Decode token to get username (sub)
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const user = { username: payload.sub };
+        localStorage.setItem('user', JSON.stringify(user));
+
+        // ✅ Navigate to dashboard
+        router.push('/dashboard');
+      } else if (!isLoginMode) {
         setMessage('Signup successful! You can now log in.');
         setIsLoginMode(true); // switch to login after signup
+      } else {
+        setMessage('Login failed: Invalid token.');
       }
     } catch (err: any) {
       console.error(`${isLoginMode ? 'Login' : 'Signup'} error:`, err.response?.data);

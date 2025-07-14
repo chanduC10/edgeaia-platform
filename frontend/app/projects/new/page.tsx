@@ -15,8 +15,9 @@ import {
   FileText,
   Users,
   ArrowRight,
-  CheckCircle
+  CheckCircle,
 } from 'lucide-react';
+import axios from 'axios';
 
 interface ProjectType {
   id: string;
@@ -36,7 +37,7 @@ const projectTypes: ProjectType[] = [
     icon: Eye,
     examples: ['Defect detection', 'Safety equipment', 'Vehicle detection'],
     difficulty: 'Medium',
-    color: 'bg-blue-500/20 text-blue-400 border-blue-500/20'
+    color: 'bg-blue-500/20 text-blue-400 border-blue-500/20',
   },
   {
     id: 'classification',
@@ -45,7 +46,7 @@ const projectTypes: ProjectType[] = [
     icon: Layers,
     examples: ['Product sorting', 'Quality grading', 'Medical diagnosis'],
     difficulty: 'Easy',
-    color: 'bg-green-500/20 text-green-400 border-green-500/20'
+    color: 'bg-green-500/20 text-green-400 border-green-500/20',
   },
   {
     id: 'inspection',
@@ -54,7 +55,7 @@ const projectTypes: ProjectType[] = [
     icon: Search,
     examples: ['PCB inspection', 'Textile defects', 'Surface scratches'],
     difficulty: 'Hard',
-    color: 'bg-purple-500/20 text-purple-400 border-purple-500/20'
+    color: 'bg-purple-500/20 text-purple-400 border-purple-500/20',
   },
   {
     id: 'ocr',
@@ -63,7 +64,7 @@ const projectTypes: ProjectType[] = [
     icon: FileText,
     examples: ['Document processing', 'License plates', 'Serial numbers'],
     difficulty: 'Medium',
-    color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/20'
+    color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/20',
   },
   {
     id: 'reid',
@@ -72,8 +73,8 @@ const projectTypes: ProjectType[] = [
     icon: Users,
     examples: ['Person tracking', 'Vehicle re-identification', 'Asset tracking'],
     difficulty: 'Hard',
-    color: 'bg-red-500/20 text-red-400 border-red-500/20'
-  }
+    color: 'bg-red-500/20 text-red-400 border-red-500/20',
+  },
 ];
 
 export default function NewProject() {
@@ -82,34 +83,52 @@ export default function NewProject() {
   const [selectedType, setSelectedType] = useState<string>('');
   const [step, setStep] = useState(1);
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleTypeSelect = (typeId: string) => {
     setSelectedType(typeId);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step === 1 && selectedType) {
       setStep(2);
     } else if (step === 2 && projectName.trim()) {
-      const projectId = Date.now().toString();
-      localStorage.setItem('currentProject', JSON.stringify({
-        id: projectId,
-        name: projectName,
-        type: selectedType,
-        createdAt: new Date().toISOString()
-      }));
-      // You can also store file info if needed
-      console.log('Selected files:', selectedFiles);
-      router.push(`/projects/${projectId}/dataset`);
+      const token = localStorage.getItem('token');
+
+      try {
+        const response = await axios.post(
+          'https://edgeaia-backend.onrender.com/api/projects',
+          {
+            name: projectName,
+            type: selectedType,
+            status: 'training', // default status
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const projectId = response.data.id;
+        router.push(`/projects/${projectId}/dataset`);
+      } catch (error: any) {
+        console.error('❌ Error creating project:', error);
+        setErrorMessage('Failed to create project. Please try again.');
+      }
     }
   };
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'Easy': return 'bg-green-500/10 text-green-400 border-green-500/20';
-      case 'Medium': return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
-      case 'Hard': return 'bg-red-500/10 text-red-400 border-red-500/20';
-      default: return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
+      case 'Easy':
+        return 'bg-green-500/10 text-green-400 border-green-500/20';
+      case 'Medium':
+        return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
+      case 'Hard':
+        return 'bg-red-500/10 text-red-400 border-red-500/20';
+      default:
+        return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
     }
   };
 
@@ -120,6 +139,7 @@ export default function NewProject() {
           <h1 className="text-3xl font-bold text-white">Create New Project</h1>
           <p className="text-slate-400">Set up a new Edge AI project for training and deployment</p>
 
+          {/* Stepper */}
           <div className="flex items-center justify-center gap-2 mt-6">
             <div className={`flex items-center gap-2 ${step >= 1 ? 'text-blue-400' : 'text-slate-500'}`}>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${
@@ -141,6 +161,7 @@ export default function NewProject() {
           </div>
         </div>
 
+        {/* Step 1: Choose Type */}
         {step === 1 && (
           <div className="space-y-6">
             <div className="text-center">
@@ -170,17 +191,14 @@ export default function NewProject() {
                     </Badge>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium text-slate-300">Use cases:</p>
-                      <ul className="text-sm text-slate-400 space-y-1">
-                        {type.examples.map((example, index) => (
-                          <li key={index} className="flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 rounded-full bg-slate-500" />
-                            {example}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                    <ul className="text-sm text-slate-400 space-y-1">
+                      {type.examples.map((example, idx) => (
+                        <li key={idx} className="flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-slate-500" />
+                          {example}
+                        </li>
+                      ))}
+                    </ul>
                   </CardContent>
                 </Card>
               ))}
@@ -199,6 +217,7 @@ export default function NewProject() {
           </div>
         )}
 
+        {/* Step 2: Project Details */}
         {step === 2 && (
           <div className="space-y-6">
             <div className="text-center">
@@ -218,16 +237,15 @@ export default function NewProject() {
                   <Label htmlFor="projectName" className="text-slate-300">Project Name</Label>
                   <Input
                     id="projectName"
-                    placeholder="e.g., Tyre Tread Detection"
+                    placeholder="e.g., Tyre Detection"
                     value={projectName}
                     onChange={(e) => setProjectName(e.target.value)}
                     className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400"
                   />
                 </div>
 
-                {/* Image file input */}
                 <div className="space-y-2">
-                  <Label htmlFor="projectImages" className="text-slate-300">Select Images</Label>
+                  <Label htmlFor="projectImages" className="text-slate-300">Upload Images</Label>
                   <Input
                     id="projectImages"
                     type="file"
@@ -241,24 +259,9 @@ export default function NewProject() {
                   )}
                 </div>
 
-                <div className="p-4 rounded-lg bg-slate-800/30 border border-slate-700/50">
-                  <div className="flex items-center gap-3">
-                    {(() => {
-                      const type = projectTypes.find(t => t.id === selectedType);
-                      return type ? (
-                        <>
-                          <div className={`p-2 rounded-lg ${type.color}`}>
-                            <type.icon className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-white">{type.name}</p>
-                            <p className="text-xs text-slate-400">{type.description}</p>
-                          </div>
-                        </>
-                      ) : null;
-                    })()}
-                  </div>
-                </div>
+                {errorMessage && (
+                  <p className="text-red-500 text-sm">{errorMessage}</p>
+                )}
               </CardContent>
             </Card>
 
