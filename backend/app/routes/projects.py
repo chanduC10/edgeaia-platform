@@ -44,10 +44,31 @@ class UpdateProject(BaseModel):
     name: str
     status: str
 
-# ✅ GET: Fetch all projects
+# ✅ GET: Fetch all projects (add dummy project if none)
 @router.get("/projects", response_model=List[Project])
 async def get_projects(current_user: str = Depends(verify_token)):
-    return [p for p in projects_db if p["owner"] == current_user]
+    global project_id_counter
+
+    user_projects = [p for p in projects_db if p["owner"] == current_user]
+
+    # ✅ Add dummy project if none exist
+    if not user_projects:
+        dummy = {
+            "id": project_id_counter,
+            "name": "Demo Project",
+            "type": "Vision",
+            "status": "deployed",
+            "accuracy": 89.3,
+            "lastTrained": "yesterday",
+            "deviceCount": 3,
+            "modelVersion": "v1.0",
+            "owner": current_user
+        }
+        projects_db.append(dummy)
+        project_id_counter += 1
+        user_projects.append(dummy)
+
+    return user_projects
 
 # ➕ POST: Create new project
 @router.post("/projects", response_model=Project)

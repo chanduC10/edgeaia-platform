@@ -17,7 +17,7 @@ interface Project {
   id: string;
   name: string;
   type: string;
-  status: 'training' | 'deployed' | 'monitoring' | 'idle';
+  status: string;
   accuracy: number;
   lastTrained: string;
   deviceCount: number;
