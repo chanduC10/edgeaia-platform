@@ -186,9 +186,6 @@ export default function NewProject() {
                     <CardDescription className="text-slate-400">
                       {type.description}
                     </CardDescription>
-                    <Badge className={getDifficultyColor(type.difficulty)}>
-                      {type.difficulty}
-                    </Badge>
                   </CardHeader>
                   <CardContent>
                     <ul className="text-sm text-slate-400 space-y-1">
