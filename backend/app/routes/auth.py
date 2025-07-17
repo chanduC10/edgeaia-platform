@@ -1,39 +1,43 @@
-# app/routes/auth.py
+# backend/app/routes/auth.py
 
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from app.core.auth import hash_password, verify_password, create_access_token
+from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.orm import Session
+from models.user import UserCreate, Token, User
+from core.db import SessionLocal
+from core.auth import hash_password, verify_password, create_access_token
 
 router = APIRouter()
 
-# Fake DB for now
-fake_db = {}
+# Dependency to get DB session
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-# Signup model
-class SignUpModel(BaseModel):
-    username: str
-    password: str
+@router.post("/signup", response_model=Token)
+def signup(user: UserCreate, db: Session = Depends(get_db)):
+    existing_user = db.query(User).filter(User.username == user.username).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username already exists")
 
-# Login model
-class LoginModel(BaseModel):
-    username: str
-    password: str
+    new_user = User(
+        username=user.username,
+        password=hash_password(user.password)
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
 
-# Signup route
-@router.post("/signup")
-def signup(user: SignUpModel):
-    if user.username in fake_db:
-        raise HTTPException(status_code=400, detail="User already exists")
-    fake_db[user.username] = hash_password(user.password)
-    return {"msg": "User created"}
+    token = create_access_token({"sub": new_user.username})
+    return {"access_token": token, "token_type": "bearer"}
 
-# Login route
-@router.post("/login")
-def login(user: LoginModel):
-    if user.username not in fake_db:
-        raise HTTPException(status_code=404, detail="User not found")
-    if not verify_password(user.password, fake_db[user.username]):
-        raise HTTPException(status_code=401, detail="Wrong password")
-    
-    token = create_access_token({"sub": user.username})
+@router.post("/login", response_model=Token)
+def login(user: UserCreate, db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.username == user.username).first()
+    if not db_user or not verify_password(user.password, db_user.password):
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+
+    token = create_access_token({"sub": db_user.username})
     return {"access_token": token, "token_type": "bearer"}
