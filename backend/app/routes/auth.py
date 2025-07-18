@@ -1,33 +1,39 @@
 # app/routes/auth.py
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from app.models.user import User, UserCreate, UserLogin
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 from app.core.auth import hash_password, verify_password, create_access_token
-from app.core.db import get_db
 
 router = APIRouter()
 
-@router.post("/register")
-def register(user: UserCreate, db: Session = Depends(get_db)):
-    existing_user = db.query(User).filter(User.username == user.username).first()
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Username already registered")
+# Fake DB for now
+fake_db = {}
 
-    hashed_pw = hash_password(user.password)
-    new_user = User(username=user.username, password=hashed_pw)
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+# Signup model
+class SignUpModel(BaseModel):
+    username: str
+    password: str
 
-    return {"message": "User registered successfully"}
+# Login model
+class LoginModel(BaseModel):
+    username: str
+    password: str
 
+# Signup route
+@router.post("/signup")
+def signup(user: SignUpModel):
+    if user.username in fake_db:
+        raise HTTPException(status_code=400, detail="User already exists")
+    fake_db[user.username] = hash_password(user.password)
+    return {"msg": "User created"}
+
+# Login route
 @router.post("/login")
-def login(user: UserLogin, db: Session = Depends(get_db)):
-    db_user = db.query(User).filter(User.username == user.username).first()
-    if not db_user or not verify_password(user.password, db_user.password):
-        raise HTTPException(status_code=401, detail="Invalid username or password")
-
-    token = create_access_token(data={"sub": user.username})
-    return {"access_token": token, "token_type": "bearer"}
+def login(user: LoginModel):
+    if user.username not in fake_db:
+        raise HTTPException(status_code=404, detail="User not found")
+    if not verify_password(user.password, fake_db[user.username]):
+        raise HTTPException(status_code=401, detail="Wrong password")
     
+    token = create_access_token({"sub": user.username})
+    return {"access_token": token, "token_type": "bearer"}
