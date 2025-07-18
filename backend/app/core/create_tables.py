@@ -5,3 +5,4 @@ from app.models.user import Base
 # Create all tables
 print("Creating tables...")
 Base.metadata.create_all(bind=engine)
+    
