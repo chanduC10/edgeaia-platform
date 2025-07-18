@@ -1,56 +1,37 @@
-# backend/app/core/auth.py
+# app/core/auth.py
 
-from fastapi import APIRouter, HTTPException
-from sqlalchemy.orm import Session
-from backend.app.db import SessionLocal
-from backend.app.models.user import User
 from passlib.context import CryptContext
-from jose import jwt
 from datetime import datetime, timedelta
+from jose import JWTError, jwt
+from decouple import config
 
-router = APIRouter()
-
+# Hashing configuration
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-SECRET_KEY = "supersecret"
+
+# Environment variables
+SECRET_KEY = config("SECRET_KEY", default="supersecretkey")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-# ✅ Password hashing
-def hash_password(password: str):
+# Password hashing
+def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
-def verify_password(plain_password, hashed_password):
+def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
-# ✅ Token creation
-def create_access_token(data: dict):
+# JWT token creation
+def create_access_token(data: dict, expires_delta: timedelta = None) -> str:
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
 
-# ✅ Signup route
-@router.post("/signup")
-def signup(username: str, password: str):
-    db: Session = SessionLocal()
-    user = db.query(User).filter(User.username == username).first()
-    if user:
-        raise HTTPException(status_code=400, detail="User already exists")
-
-    hashed_pw = hash_password(password)
-    new_user = User(username=username, password=hashed_pw)
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return {"message": "Signup successful!"}
-
-# ✅ Login route
-@router.post("/login")
-def login(username: str, password: str):
-    db: Session = SessionLocal()
-    user = db.query(User).filter(User.username == username).first()
-    if not user or not verify_password(password, user.password):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-
-    access_token = create_access_token(data={"sub": username})
-    return {"access_token": access_token, "token_type": "bearer"}
+# JWT token decoding (optional helper)
+def decode_access_token(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except JWTError:
+        return None
