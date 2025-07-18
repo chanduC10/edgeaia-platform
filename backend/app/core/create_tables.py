@@ -1,8 +1,7 @@
-# create_tables.py (project root level)
+# app/create_tables.py
+
 from app.core.db import engine
 from app.models.user import Base
 
 # Create all tables
-print("Creating tables...")
 Base.metadata.create_all(bind=engine)
-    
